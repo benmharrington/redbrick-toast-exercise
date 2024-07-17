@@ -11,7 +11,7 @@ import Snackbar from '@mui/material/Snackbar';
 import Slide from '@mui/material/Slide';
 import CloseIcon from '@mui/icons-material/Close';
 
-import { createMockFormSubmission, onMessage } from './service/mockServer';
+import { createMockFormSubmission, onMessage, saveLikedFormSubmission } from './service/mockServer';
 import { Stack } from '@mui/material';
 
 const defaultSnackbarContent = {
@@ -28,12 +28,12 @@ function SlideTransition(props) {
   return <Slide {...props} direction="up" />;
 }
 
-export default function Header() {
+export default function Header({ fetchList }) {
   const [open, setOpen] = useState(false);
-  const [snackbarContent, setSnackbarContent] = useState(defaultSnackbarContent);
+  const [newFormData, setNewFormData] = useState(defaultSnackbarContent);
 
   const createSnackbarContent = submissionData => {
-    setSnackbarContent({ ...submissionData });
+    setNewFormData({ ...submissionData });
   }
 
   const handleNewSubmission = () => {
@@ -41,8 +41,16 @@ export default function Header() {
     setOpen(true);
   }
 
-  const handleLike = () => {
-    console.log('save content');
+  const handleLike = async () => {
+    try {
+      await saveLikedFormSubmission(newFormData);
+
+      setOpen(false);
+
+      await fetchList();
+    } catch (e) {
+      console.error('Error saving form submission', e);
+    }
   }
 
   const handleClose = (_, reason) => {
@@ -101,8 +109,8 @@ export default function Header() {
         onClose={handleClose}
         message={(
           <Stack sx={{mr: 4}}>
-            <Typography>{snackbarContent?.data?.firstName} {snackbarContent?.data?.lastName}</Typography>
-            <Typography>{snackbarContent?.data?.email}</Typography>
+            <Typography>{newFormData?.data?.firstName} {newFormData?.data?.lastName}</Typography>
+            <Typography>{newFormData?.data?.email}</Typography>
           </Stack>
         )}
         action={snackbarActions}
