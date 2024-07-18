@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
+
 import Container from '@mui/material/Container';
 
 import Header from './Header';
@@ -8,9 +9,11 @@ import { fetchLikedFormSubmissions } from './service/mockServer';
 
 function App() {
   const [init, setInit] = useState(false);
+  const [refetchToggler, setRefetchToggler] = useState(false);
   const [likedSubmissions, setLikedSubmissions] = useState([]);
+  const [addingNewSubmission, setAddingNewSubmission] = useState(false);
 
-  const fetchList = async () => {
+  const fetchList = useCallback(async () => {
     try {
       const response = await fetchLikedFormSubmissions();
 
@@ -18,17 +21,27 @@ function App() {
       setInit(true);
     } catch(e) {
       console.error('Error fetching list', e);
+      setRefetchToggler(curr => !curr);
     }
-  }
+  }, []);
+
+  useEffect(() => {
+    fetchList();
+  }, [refetchToggler, fetchList]);
 
   return (
     <>
-      <Header fetchList={fetchList}/>
+      <Header
+        addingNewSubmission={addingNewSubmission}
+        setAddingNewSubmission={setAddingNewSubmission}
+        setRefetchToggler={setRefetchToggler}
+        fetchList={fetchList}
+      />
       <Container>
         <Content
+          addingNewSubmission={addingNewSubmission}
           init={init}
           likedSubmissions={likedSubmissions}
-          fetchList={fetchList}
         />
       </Container>
     </>
